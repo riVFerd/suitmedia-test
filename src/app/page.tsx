@@ -32,7 +32,7 @@ export default async function Home() {
         articles?.map((article, index) => {
             console.log(article.content);
             return (
-                <div key={index} className="flex flex-col items-center justify-center">
+                <div key={index} className="flex flex-col items-center justify-center h-[200vh]">
                   {/*TODO: Display article card here*/}
                 </div>
             )
