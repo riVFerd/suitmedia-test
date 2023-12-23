@@ -5,6 +5,7 @@ import {useEffect, useState} from "react";
 import {MoonLoader} from "react-spinners";
 import Dropdown from "@/components/Dropdown";
 import PageInfo from "@/models/page_info";
+import PaginateButton from "@/components/PaginateButton";
 
 export default function ListArticle() {
   const [currentArticles, setCurrentArticles] = useState<Article[] | null>(null);
@@ -16,6 +17,7 @@ export default function ListArticle() {
 
   async function fetchArticles(pageNumber = 1, pageSize = PageSize.Small, sort = SortOption.Newest) {
     try {
+      setIsLoading(true);
       const {articles, pageInfo} = await Article.getArticles(pageNumber, pageSize, sort);
       setCurrentArticles(articles);
       setCurrentPageInfo(pageInfo);
@@ -28,6 +30,7 @@ export default function ListArticle() {
 
   async function fetchArticlesByUrl(url: string) {
     try {
+      setIsLoading(true);
       const {articles, pageInfo} = await Article.getArticlesByUrl(url);
       setCurrentArticles(articles);
       setCurrentPageInfo(pageInfo);
@@ -41,14 +44,12 @@ export default function ListArticle() {
   async function handlePageSizeChange(event: React.ChangeEvent<HTMLSelectElement>) {
     const pageSize = parseInt(event.target.value);
     setPageSize(pageSize);
-    setIsLoading(true);
     await fetchArticles(pageNumber, pageSize, sortBy);
   }
 
   async function handleSortByChange(event: React.ChangeEvent<HTMLSelectElement>) {
     const sort = event.target.value as SortOption;
     setSortBy(sort);
-    setIsLoading(true);
     await fetchArticles(pageNumber, pageSize, sort);
   }
 
@@ -59,7 +60,7 @@ export default function ListArticle() {
   return (
     <div className="flex flex-col items-center justify-center py-10 px-16 w-full">
       <div className="flex items-center justify-between my-4 px-20 w-full">
-        <p>Showing 1-10 of 100</p>
+        <p>{`Showing ${currentPageInfo?.from}-${currentPageInfo?.to} of ${currentPageInfo?.total}`}</p>
         <div id="menuButton" className="flex">
           <div id="pageSizeDropdown" className="relative flex items-center">
             <label htmlFor="pageSize">Show per page: </label>
@@ -88,16 +89,24 @@ export default function ListArticle() {
         }
       </div>
 
-      {/* Pagination */}
       <div className="flex items-center justify-center my-4 px-20 w-full">
         <div id="pagination" className="flex items-center">
-          <button className="px-4 py-2 border border-gray-300 rounded-md mr-2">Previous</button>
+          <PaginateButton label="&laquo;" active={false} hasUrl={currentPageInfo?.first !== null}
+                          onClick={() => fetchArticlesByUrl(currentPageInfo?.first ?? '')}/>
           {
-            // pageInfo?.links.map((link) => (
-            //   <button key={link.url} className="px-4 py-2 border bo	rder-gray-300 rounded-md mr-2">{link.label}</button>
-            // ))
+            currentPageInfo?.links.map((link, index) => (
+              (index === 0)
+                ? <PaginateButton key={index} label="&lt;" active={link.active} hasUrl={link.url !== null}
+                                  onClick={() => fetchArticlesByUrl(link.url!)}/>
+                : (index === currentPageInfo.links.length - 1)
+                  ? <PaginateButton key={index} label="&gt;" active={link.active} hasUrl={link.url !== null}
+                                    onClick={() => fetchArticlesByUrl(link.url!)}/>
+                  : <PaginateButton key={index} label={link.label} active={link.active} hasUrl={link.url !== null}
+                                    onClick={() => fetchArticlesByUrl(link.url!)}/>
+            ))
           }
-          <button className="px-4 py-2 border border-gray-300 rounded-md mr-2">Next</button>
+          <PaginateButton label="&raquo;" active={false} hasUrl={currentPageInfo?.last !== null}
+                          onClick={() => fetchArticlesByUrl(currentPageInfo?.last ?? '')}/>
         </div>
       </div>
     </div>

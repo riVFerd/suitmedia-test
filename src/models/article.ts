@@ -117,18 +117,24 @@ class Article {
     let articles: Article[] | null = null;
     let pageInfo: PageInfo | null = null;
 
-    const response = await fetch(url, {
+    // Extract query parameters from the provided URL
+    const urlObj = new URL(url);
+    const queryParams = urlObj.searchParams;
+
+    // Form the internal API URL using the extracted query parameters
+    const internalApiUrl = `/api/suitmedia?${queryParams.toString()}`;
+
+    const response = await fetch(internalApiUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       }
     });
-
     if (response.ok) {
       const data = await response.json();
       articles = data.data.map((article: any) => Article.fromJson(article));
-      pageInfo = PageInfo.fromJson(data.meta);
+      pageInfo = PageInfo.fromJson(data);
     }
 
     return { articles, pageInfo };
