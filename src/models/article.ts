@@ -12,12 +12,24 @@ class Image {
   }
 }
 
+// Enum option for sorting articles
+export enum SortOption {
+  Newest = '-published_at',
+  Oldest = 'published_at',
+}
+
+export enum PageSize {
+    Small = 10,
+    Medium = 20,
+    Large = 50,
+}
+
 class Article {
   id: number;
   slug: string;
   title: string;
   content: HTMLElement;
-  published_at: string;
+  published_at: Date;
   deleted_at: string | null;
   created_at: string;
   updated_at: string;
@@ -29,7 +41,7 @@ class Article {
     slug: string,
     title: string,
     content: HTMLElement,
-    published_at: string,
+    published_at: Date,
     deleted_at: string | null,
     created_at: string,
     updated_at: string,
@@ -55,13 +67,46 @@ class Article {
       json.slug,
       json.title,
       json.content,
-      json.published_at,
+      new Date(json.published_at),
       json.deleted_at,
       json.created_at,
       json.updated_at,
       json.small_image.map((img: any) => new Image(img.id, img.mime, img.file_name, img.url)),
       json.medium_image.map((img: any) => new Image(img.id, img.mime, img.file_name, img.url))
     );
+  }
+
+  // Static method to get all articles
+  static async getArticles(pageNumber: number = 1, pageSize: PageSize = PageSize.Small, sort: SortOption = SortOption.Newest): Promise<Article[] | null> {
+    const baseUrl = 'https://suitmedia-backend.suitdev.com/api/ideas';
+    const queryParams = new URLSearchParams({
+      'page[number]': pageNumber.toString(),
+      'page[size]': pageSize.toString(),
+      'sort': sort
+    });
+    queryParams.append('append[]', 'small_image');
+    queryParams.append('append[]', 'medium_image');
+
+    const url = `${baseUrl}?${queryParams.toString()}`;
+
+    let articles: Article[] | null = null;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      articles = data.data.map((article: any) => {
+        return Article.fromJson(article)
+      });
+    }
+
+    return articles;
   }
 }
 

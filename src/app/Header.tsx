@@ -40,7 +40,7 @@ export default function Header() {
     <header
       className={
         `w-full fixed flex justify-between items-center px-16 py-4 z-50 transition-all duration-300 
-        ${isHeaderVisible ? 'bg-primary' : isHeaderSemiVisible ? 'bg-primary-semitransparent' : 'bg-transparent -translate-y-full'}`
+        ${isHeaderVisible ? 'bg-primary' : isHeaderSemiVisible ? 'bg-primary-semitransparent backdrop-blur-sm' : 'bg-transparent -translate-y-full'}`
       }
     >
       <Link href="/">
