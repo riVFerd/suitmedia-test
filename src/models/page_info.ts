@@ -51,7 +51,8 @@ class PageInfo {
   }
 
   static fromJson(json: any): PageInfo {
-    const links = json.links.map((link: any) => MetaLink.fromJson(link));
+    console.log(json)
+    const links = json.meta.links.map((link: any) => MetaLink.fromJson(link));
     return new PageInfo(
       json.links.first,
       json.links.last,

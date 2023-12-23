@@ -4,9 +4,11 @@ import Article, {PageSize, SortOption} from "@/models/article";
 import {useEffect, useState} from "react";
 import {MoonLoader} from "react-spinners";
 import Dropdown from "@/components/Dropdown";
+import PageInfo from "@/models/page_info";
 
 export default function ListArticle() {
-  const [articles, setArticles] = useState<Article[] | null>(null);
+  const [currentArticles, setCurrentArticles] = useState<Article[] | null>(null);
+  const [currentPageInfo, setCurrentPageInfo] = useState<PageInfo | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(PageSize.Small);
   const [sortBy, setSortBy] = useState(SortOption.Newest);
@@ -14,8 +16,21 @@ export default function ListArticle() {
 
   async function fetchArticles(pageNumber = 1, pageSize = PageSize.Small, sort = SortOption.Newest) {
     try {
-      const result = await Article.getArticles(pageNumber, pageSize, sort);
-      setArticles(result);
+      const {articles, pageInfo} = await Article.getArticles(pageNumber, pageSize, sort);
+      setCurrentArticles(articles);
+      setCurrentPageInfo(pageInfo);
+    } catch (error) {
+      console.error('Error fetching articles:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function fetchArticlesByUrl(url: string) {
+    try {
+      const {articles, pageInfo} = await Article.getArticlesByUrl(url);
+      setCurrentArticles(articles);
+      setCurrentPageInfo(pageInfo);
     } catch (error) {
       console.error('Error fetching articles:', error);
     } finally {
@@ -67,10 +82,23 @@ export default function ListArticle() {
         {
           isLoading
             ? <MoonLoader color={'#ff6600ff'} loading={isLoading} size={50}/>
-            : articles?.map((article) => (
+            : currentArticles?.map((article) => (
               <ArticleCard key={article.id} article={article}/>
             ))
         }
+      </div>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-center my-4 px-20 w-full">
+        <div id="pagination" className="flex items-center">
+          <button className="px-4 py-2 border border-gray-300 rounded-md mr-2">Previous</button>
+          {
+            // pageInfo?.links.map((link) => (
+            //   <button key={link.url} className="px-4 py-2 border bo	rder-gray-300 rounded-md mr-2">{link.label}</button>
+            // ))
+          }
+          <button className="px-4 py-2 border border-gray-300 rounded-md mr-2">Next</button>
+        </div>
       </div>
     </div>
   );

@@ -1,3 +1,5 @@
+import PageInfo from "@/models/page_info";
+
 class Image {
   id: number;
   mime: string;
@@ -19,9 +21,9 @@ export enum SortOption {
 }
 
 export enum PageSize {
-    Small = 10,
-    Medium = 20,
-    Large = 50,
+  Small = 10,
+  Medium = 20,
+  Large = 50,
 }
 
 class Article {
@@ -33,8 +35,8 @@ class Article {
   deleted_at: string | null;
   created_at: string;
   updated_at: string;
-  small_image: Image[];
-  medium_image: Image[];
+  small_image: Image[] | null;
+  medium_image: Image[] | null;
 
   constructor(
     id: number,
@@ -71,13 +73,13 @@ class Article {
       json.deleted_at,
       json.created_at,
       json.updated_at,
-      json.small_image.map((img: any) => new Image(img.id, img.mime, img.file_name, img.url)),
-      json.medium_image.map((img: any) => new Image(img.id, img.mime, img.file_name, img.url))
+      json?.small_image?.map((img: any) => new Image(img.id, img.mime, img.file_name, img.url)) || null,
+      json?.medium_image?.map((img: any) => new Image(img.id, img.mime, img.file_name, img.url)) || null
     );
   }
 
   // Static method to get all articles
-  static async getArticles(pageNumber: number = 1, pageSize: PageSize = PageSize.Small, sort: SortOption = SortOption.Newest): Promise<Article[] | null> {
+  static async getArticles(pageNumber: number = 1, pageSize: PageSize = PageSize.Small, sort: SortOption = SortOption.Newest): Promise<{ articles: Article[] | null, pageInfo: PageInfo | null }> {
     const baseUrl = 'https://suitmedia-backend.suitdev.com/api/ideas';
     const queryParams = new URLSearchParams({
       'page[number]': pageNumber.toString(),
@@ -90,6 +92,7 @@ class Article {
     const url = `${baseUrl}?${queryParams.toString()}`;
 
     let articles: Article[] | null = null;
+    let pageInfo: PageInfo | null = null;
 
     const response = await fetch(url, {
       method: 'GET',
@@ -102,12 +105,36 @@ class Article {
     if (response.ok) {
       const data = await response.json();
       articles = data.data.map((article: any) => {
-        return Article.fromJson(article)
+        return Article.fromJson(article);
       });
+      pageInfo = PageInfo.fromJson(data);
     }
 
-    return articles;
+    return { articles, pageInfo };
   }
+
+  static async getArticlesByUrl(url: string): Promise<{ articles: Article[] | null, pageInfo: PageInfo | null }> {
+    let articles: Article[] | null = null;
+    let pageInfo: PageInfo | null = null;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      articles = data.data.map((article: any) => Article.fromJson(article));
+      pageInfo = PageInfo.fromJson(data.meta);
+    }
+
+    return { articles, pageInfo };
+  }
+
+
 }
 
 export default Article;
