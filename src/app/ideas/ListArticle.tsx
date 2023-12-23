@@ -1,7 +1,7 @@
 'use client';
 import ArticleCard from "@/components/ArticleCard";
 import Article, {PageSize, SortOption} from "@/models/article";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {MoonLoader} from "react-spinners";
 import Dropdown from "@/components/Dropdown";
 import PageInfo from "@/models/page_info";
@@ -10,7 +10,6 @@ import PaginateButton from "@/components/PaginateButton";
 export default function ListArticle() {
   const [currentArticles, setCurrentArticles] = useState<Article[] | null>(null);
   const [currentPageInfo, setCurrentPageInfo] = useState<PageInfo | null>(null);
-  const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(PageSize.Small);
   const [sortBy, setSortBy] = useState(SortOption.Newest);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,13 +43,13 @@ export default function ListArticle() {
   async function handlePageSizeChange(event: React.ChangeEvent<HTMLSelectElement>) {
     const pageSize = parseInt(event.target.value);
     setPageSize(pageSize);
-    await fetchArticles(pageNumber, pageSize, sortBy);
+    await fetchArticles(1, pageSize, sortBy);
   }
 
   async function handleSortByChange(event: React.ChangeEvent<HTMLSelectElement>) {
     const sort = event.target.value as SortOption;
     setSortBy(sort);
-    await fetchArticles(pageNumber, pageSize, sort);
+    await fetchArticles(1, pageSize, sort);
   }
 
   useEffect(() => {
